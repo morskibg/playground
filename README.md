@@ -18,3 +18,10 @@
 ### it can be run on the terminal after activating virtual environment with single parametter:
 ###  * query_numbers - non negative integer, specifying number of queries that will be used (defaul = 1000)
 ### This script uses entirely synchronous approach with single query. 
+
+### 3. psycopg2_thread_bench.py - based on https://www.psycopg.org/docs/
+### it can be run on the terminal after activating virtual environment with single parametter:
+###  * query_numbers - non negative integer, specifying number of queries that will be used (defaul = 1000)
+### This script uses ThreadedConnectionPool, ThreadPoolExecutor  and  single query. 
+
+### 4. shell script file mass_launcher.sh might be executed and will run all 3 bench script with 1000 queries for 50 times

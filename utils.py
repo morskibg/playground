@@ -10,20 +10,20 @@ from settings import TABLE_NAME, DATA_DIR_PATH
 
 import loger
 
-module_logger = logging.getLogger('bench_app.utils')
+# module_logger = logging.getLogger('bench_app.utils')
 
 def async_timed():
     def wrapper(func: Callable) -> Callable:
         @functools.wraps(func)
         async def wrapped(*args, **kwargs) -> Any:
-            module_logger.info(f'starting {func} ')
+            print(f'starting {func} ')
             start = time.time()
             try:
                 return await func(*args, **kwargs)
             finally:
                 end = time.time()
                 total = end - start
-                module_logger.info(f'finished {func} in {total:.4f} second(s)')
+                print(f'finished {func} in {total:.4f} second(s)')
         return wrapped
     return wrapper
 
@@ -31,22 +31,24 @@ def sync_timed():
     def wrapper(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapped(*args, **kwargs) -> Any:
-            module_logger.info(f'starting {func} ')
+            print(f'starting {func} ')
             start = time.time()
             try:
                 return func(*args, **kwargs)
             finally:
                 end = time.time()
                 total = end - start
-                module_logger.info(f'finished {func} in {total:.4f} second(s)')
+                print(f'finished {func} in {total:.4f} second(s)')
         return wrapped
     return wrapper
 
 def create_queries_list(qty):
 
+    data_length = 2000
+
     csv_path = abspath(dirname(DATA_DIR_PATH))
 
-    files_to_open = qty // 2000 + (qty % 2000 > 0)   
+    files_to_open = qty // data_length + (qty % data_length > 0)   
     suffs = [random.randint(1,99) for _ in range(files_to_open)]
     data_lists = [
         list(
@@ -57,9 +59,7 @@ def create_queries_list(qty):
         for suffix in suffs
         ]
 
-    urls = sum(data_lists, [])[:qty]
-    
-    
+    urls = sum(data_lists, [])[:qty]    
     
     querues = [f"SELECT * FROM {TABLE_NAME} WHERE url_hash = '{random.choice(urls)}'" for _ in  range(len(urls))]
 

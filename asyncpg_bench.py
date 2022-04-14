@@ -2,6 +2,7 @@ import sys
 import asyncio
 import asyncpg
 import logging
+import time
 
 from utils import async_timed, create_queries_list, input_args_parser
 from settings import *
@@ -47,19 +48,19 @@ async def main(kwargs_dict):
         command_timeout=60
     ) as pool:
 
-     
-        if kwargs_dict['test_type'] == 'sync':
-            module_logger.info(f'starting non concurent querying ')
+        t1 = time.perf_counter()
+
+        if kwargs_dict['test_type'] == 'sync':            
             db_records = await query_db_synchronously(pool, queries)
-        elif kwargs_dict['test_type'] == 'async':
-            module_logger.info(f'starting async querying ')
+
+        elif kwargs_dict['test_type'] == 'async':            
             db_records = await query_db_concurrently(pool, queries)
-        elif kwargs_dict['test_type'] == 'single_query':
-            module_logger.info(f'starting querying with single query')
-            db_records = await query_db_concurrently_with_static(pool)
-            
-        else:
-            pass
+
+        else:            
+            db_records = await query_db_concurrently_with_static(pool)            
+        
+        t2 = time.perf_counter()
+        module_logger.info(f"Finished in {t2-t1:.4f} seconds for {len(db_records)} records - {kwargs_dict['test_type']} type")
 
     
 

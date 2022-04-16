@@ -1,54 +1,55 @@
 from os.path import join, abspath, dirname
+from os import  remove, listdir, walk
+from collections import namedtuple
 import functools
 import time
-from typing import Callable, Any
+import re
+
 import pandas as pd
 import random
-import logging
 
-from settings import TABLE_NAME, DATA_DIR_PATH
+
+from settings import TABLE_NAME, DATA_DIR_PATH, CSV_DATA_LENGTH, SQL_LOG_PATH
 
 import loger
 
 # module_logger = logging.getLogger('bench_app.utils')
 
 def async_timed():
-    def wrapper(func: Callable) -> Callable:
+    def wrapper(func):
         @functools.wraps(func)
-        async def wrapped(*args, **kwargs) -> Any:
-            print(f'starting {func} ')
+        async def wrapped(*args, **kwargs):
+            # print(f'starting {func} ')
             start = time.time()
             try:
                 return await func(*args, **kwargs)
             finally:
                 end = time.time()
                 total = end - start
-                print(f'finished {func} in {total:.4f} second(s)')
+                # print(f'finished {func} in {total:.4f} second(s)')
         return wrapped
     return wrapper
 
 def sync_timed():
-    def wrapper(func: Callable) -> Callable:
+    def wrapper(func):
         @functools.wraps(func)
-        def wrapped(*args, **kwargs) -> Any:
-            print(f'starting {func} ')
+        def wrapped(*args, **kwargs) :
+            # print(f'starting {func} ')
             start = time.time()
             try:
                 return func(*args, **kwargs)
             finally:
                 end = time.time()
                 total = end - start
-                print(f'finished {func} in {total:.4f} second(s)')
+                # print(f'finished {func} in {total:.4f} second(s)')
         return wrapped
     return wrapper
 
-def create_queries_list(qty):
-
-    data_length = 2000
+def create_queries_list(qty):    
 
     csv_path = abspath(dirname(DATA_DIR_PATH))
 
-    files_to_open = qty // data_length + (qty % data_length > 0)   
+    files_to_open = qty // CSV_DATA_LENGTH + (qty % CSV_DATA_LENGTH > 0)   
     suffs = [random.randint(1,99) for _ in range(files_to_open)]
     data_lists = [
         list(
@@ -98,3 +99,50 @@ def input_args_parser(argv):
                 exit(1)
 
     return kwargs
+
+def get_log_csv_df(path = SQL_LOG_PATH):    
+    
+    
+    df_list = []    
+    for _, _, files in walk(path):
+        for filename in files:
+            if filename.endswith(".csv") & (filename.find("~") == -1):
+                try:
+                    temp_df = pd.read_csv(join(SQL_LOG_PATH, filename), header=None)
+                except Exception as e:                    
+                    continue
+                df_list.append(temp_df)                
+
+    bench_df = pd.concat([x for x in df_list], ignore_index=True) if len(df_list) else None
+    return bench_df
+       
+
+def clear_bench_log_folder(path):
+
+    for f in listdir(path):             
+        remove(join(path, f))
+
+def parse_bench_log():
+
+    try:
+        bench_df = get_log_csv_df()
+        bench_df = bench_df[[0, 1, 2, 3, 4, 7, 8, 13]]
+        bench_df.columns = ['log_time','user_name','database_name','process_id',
+                            'connection_from','command_tag','session_start_time','message_text']
+
+        bench_df = bench_df[bench_df['command_tag'].isin(['PARSE', 'BIND', 'SELECT','RESET'])]
+        pattern = r"(?<=duration: )(\d+.\d+)"
+        
+        bench_df['parsed_duration']=bench_df['message_text'].str.extract(pattern).astype(float)
+        Result = namedtuple('Result',['PARSE', 'BIND', 'SELECT','RESET']) 
+        parsed_result = Result(
+            bench_df['parsed_duration'][bench_df['command_tag'] == 'PARSE'].sum() / 1000,
+            bench_df['parsed_duration'][bench_df['command_tag'] == 'BIND'].sum() / 1000,
+            bench_df['parsed_duration'][bench_df['command_tag'] == 'SELECT'].sum() / 1000,
+            bench_df['parsed_duration'][bench_df['command_tag'] == 'RESET'].sum() / 1000,
+            )
+        
+        return parsed_result
+    except:
+        return None
+

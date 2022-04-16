@@ -12,7 +12,9 @@ PORT = 5432
 DB_NAME = 'postgres' 
 TABLE_NAME = 'elastic_sharding_test'
 DATA_DIR_PATH = '/home/tests/data/'
-THREADS = 5
-
-STATIC_QUERY = f"SELECT * FROM {TABLE_NAME} WHERE url_hash = '\\x5f84272cacad'"
+SQL_LOG_PATH = '/home/sql/log/'
+BENCH_LOG_PATH = '/home/dpetkov/playground/logs'
+ASYNC_POOL_MAX = 30
+ASYNC_POOL_MIN = 30
+CSV_DATA_LENGTH = 2000
 

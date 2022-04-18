@@ -253,7 +253,7 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-*.ipynb
+# *.ipynb
 *.pdf
 *.xlsx
 *.csv

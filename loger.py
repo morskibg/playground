@@ -13,7 +13,7 @@ def get_logger(name):
     fh.setLevel(logging.DEBUG)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('date_time:%(asctime)s # name:%(name)s # leve_lname:%(levelname)s # host_Sname:%(hostname)s # ip:%(ip)s # %(message)s')
+    formatter = logging.Formatter('date_time;%(asctime)s # name;%(name)s # leve_lname;%(levelname)s # host_Sname;%(hostname)s # ip;%(ip)s # %(message)s')
     fh.setFormatter(formatter)
     ch.setFormatter(formatter)
     logger.addHandler(fh)

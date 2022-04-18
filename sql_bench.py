@@ -12,16 +12,33 @@ module_logger = get_logger('sql_bench')
 
 
 async def fetch_data(pool, query):
+    """
+    Acuire connection from pool and fetch sinle row from db.
+    Input - pool - asyncpg.create_pool instance
+          - query - prepeared query for execution
+    """
     async with pool.acquire() as connection:        
         db_record = await connection.fetchrow(query)
         return db_record       
 
 
 async def query_db_synchronously(pool, queries):
+    """
+    Synchronously fetching data. 
+    Input - pool - asyncpg.create_pool instance
+          - queries - list of prepeared query for execution
+    Output - list of fetched data
+    """
     return [await fetch_data(pool, query) for query in queries]   
 
 
 async def query_db_concurrently(pool, queries):
+    """
+        Concurrently  fetching data. 
+        Input - pool - asyncpg.create_pool instance
+              - queries - list of prepeared query for execution
+        Output - list of fetched data
+    """
     
     coroutines = [fetch_data(pool, query) for query in queries]
     return await asyncio.gather(*coroutines)
@@ -50,7 +67,8 @@ async def main(kwargs_dict):
         elif kwargs_dict['test_type'] == 'async':            
             db_records = await query_db_concurrently(pool, queries)
 
-        else:              
+        else:   
+            # enter here in case of 'single_query' - take only first query from created list and use only it.           
             queries = [queries[0] for _ in range(kwargs_dict['query_numbers'])]          
             db_records = await query_db_concurrently(pool, queries)            
         
@@ -61,10 +79,8 @@ async def main(kwargs_dict):
         for _ in range(3):
             time.sleep(10)
             try:
-                parsed_result = parse_bench_log()
-                print(parsed_result)                
-                # module_logger.info(f"Finished in {t2-t1:.4f} seconds for {len(db_records)} records - {kwargs_dict['test_type']} type - pool connection size  {ASYNC_POOL_MAX}")
-                module_logger.info(f"elapsed_time(sec):{t2-t1:.4f} # queries:{len(db_records)} # test_type:{kwargs_dict['test_type']} # pool_connection_size:{ASYNC_POOL_MAX} # agregated_time_SELECT:{parsed_result.SELECT:.4f} # agregated_time_BIND:{parsed_result.BIND:.4f} # agregated_time_PARSE:{parsed_result.PARSE:.4f} # agregated_time_RESET:{parsed_result.RESET:.4f}")
+                parsed_result = parse_bench_log()                
+                module_logger.info(f"elapsed_time(sec);{t2-t1:.4f} # queries;{len(db_records)} # test_type;{kwargs_dict['test_type']} # pool_connection_size;{ASYNC_POOL_MAX} # agregated_time_SELECT;{parsed_result.SELECT:.4f} # agregated_time_BIND;{parsed_result.BIND:.4f} # agregated_time_PARSE;{parsed_result.PARSE:.4f} # agregated_time_RESET;{parsed_result.RESET:.4f}")
 
                 break
             except:
@@ -76,6 +92,6 @@ if __name__ == '__main__':
 
     clear_bench_log_folder(SQL_LOG_PATH)
     kwargs_dict = input_args_parser(sys.argv)
-    print(f"Start for {kwargs_dict['query_numbers']}")
+    print(f"Start for {kwargs_dict['query_numbers']} queries in {kwargs_dict['test_type']} mode ")
     asyncio.run(main(kwargs_dict))
     

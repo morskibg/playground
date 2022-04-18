@@ -3,7 +3,7 @@ from os import  remove, listdir, walk
 from collections import namedtuple
 import functools
 import time
-import re
+import plotly.express as px
 
 import pandas as pd
 import random
@@ -45,7 +45,12 @@ def sync_timed():
         return wrapped
     return wrapper
 
-def create_queries_list(qty):    
+def create_queries_list(qty):  
+    """
+        Create 'select' queries list with random url_hash-es picked from csv files
+        Input - int > 0 - number of queries to be created
+        Output  - list of created queries 
+    """  
 
     csv_path = abspath(dirname(DATA_DIR_PATH))
 
@@ -67,8 +72,13 @@ def create_queries_list(qty):
     return querues
 
 def input_args_parser(argv):
+    """
+        Input CLI parametters parser. If are not specified, default values will be applied.
+        Input - args from input
+        Return - dictionary with selected parameters
+    """
 
-    default_num_queries = 1000
+    default_num_queries = 10000
     default_type = 'async'
 
     kwargs = {'file':argv[0]}
@@ -89,26 +99,31 @@ def input_args_parser(argv):
                 else:
                     kwargs['test_type'] = default_type
             except Exception as e:
+                print(e)
                 
                 print(f"""
                     usage: [BENCHMARK NAME] [QUERY NUMBERS] [TEST TYPE]
                     BENCHMARK NAME - benchmark python script file name
-                    QUERY NUMBERS - positive integer, default = 1000
-                    TEST TYPE - sync | async | single_query, default = async
+                    QUERY NUMBERS - positive integer, default = {default_num_queries}
+                    TEST TYPE - sync | async | single_query, default = {default_type}
                 """)
                 exit(1)
 
     return kwargs
 
-def get_log_csv_df(path = SQL_LOG_PATH):    
-    
+def get_log_csv_df(path = SQL_LOG_PATH):  
+    """
+    Create dataframe from logcsv files created from postgresql server for every bench file invocation.
+    Input - path to postgresql log directory
+    Output - dataframe from all available csv files.
+    """     
     
     df_list = []    
     for _, _, files in walk(path):
         for filename in files:
             if filename.endswith(".csv") & (filename.find("~") == -1):
                 try:
-                    temp_df = pd.read_csv(join(SQL_LOG_PATH, filename), header=None)
+                    temp_df = pd.read_csv(join(SQL_LOG_PATH, filename), header=None, low_memory=False)
                 except Exception as e:                    
                     continue
                 df_list.append(temp_df)                
@@ -118,11 +133,21 @@ def get_log_csv_df(path = SQL_LOG_PATH):
        
 
 def clear_bench_log_folder(path):
+    """
+    Delete all csv files in postgresql csvlog directory. Exececuted between every bench call.
+    Input - path to postgresql log directory.
+    Output - none
+    """
 
     for f in listdir(path):             
         remove(join(path, f))
 
 def parse_bench_log():
+    """
+    Parse and aggregate dataframe from csvlog files for benchlog
+    Input - none
+    Output - parsed dataframe
+    """
 
     try:
         bench_df = get_log_csv_df()

@@ -14,7 +14,7 @@ TABLE_NAME = 'elastic_sharding_test'
 DATA_DIR_PATH = '/home/tests/data/'
 SQL_LOG_PATH = '/home/sql/log/'
 BENCH_LOG_PATH = '/home/dpetkov/playground/logs'
-ASYNC_POOL_MAX = 30
-ASYNC_POOL_MIN = 30
+ASYNC_POOL_MAX = 100
+ASYNC_POOL_MIN = 100
 CSV_DATA_LENGTH = 2000
 

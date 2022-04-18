@@ -1,7 +1,7 @@
 # Test assignment Scaleflex
 ### by Dimitar Petkov  email: dimityrp@yahoo.com
 
-### status: unfinished
+### status: completed
 
 ## Usage:
 ### There are two files which can bu used: 
@@ -14,4 +14,5 @@
 ###   -- 'sync' - perfom synchronously query execution wiht connection from pool and random query
 ###   -- 'async' - perfom concurrently query execution wiht connection from pool and random query
 ###   -- 'single_query' - perfom concurrently query execution wiht connection from pool with single query
+### 2.In the excutable 'mass_launcher' maight be run all test 
 
